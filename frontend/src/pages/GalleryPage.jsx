@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getWorks } from '../services/api';
+import WorkShowcaseCard from '../components/WorkShowcaseCard.jsx';
 
 /**
  * Gallery Page Component
@@ -40,57 +41,22 @@ const GalleryPage = () => {
     setFilters({ ...filters, [name]: value });
   };
 
-  // Format date
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  // Get file type icon
-  const getFileTypeIcon = (fileType) => {
-    switch (fileType) {
-      case 'image':
-        return '🖼️';
-      case 'video':
-        return '🎥';
-      case 'pdf':
-        return '📄';
-      case 'zip':
-        return '📦';
-      default:
-        return '📎';
-    }
-  };
-
-  // Get category badge color
-  const getCategoryColor = (category) => {
-    const colors = {
-      Comic: 'bg-purple-100 text-purple-800',
-      Website: 'bg-blue-100 text-blue-800',
-      Magazine: 'bg-pink-100 text-pink-800',
-      Skit: 'bg-green-100 text-green-800',
-      Other: 'bg-gray-100 text-gray-800',
-    };
-    return colors[category] || colors.Other;
-  };
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gallery</h1>
-        <p className="text-gray-600">Browse all student works</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10 text-slate-100">
+      <div className="space-y-2">
+        <p className="text-sm uppercase tracking-[0.4em] text-slate-500">Gallery</p>
+        <h1 className="text-4xl font-semibold text-white">One project per row, clear and cinematic.</h1>
+        <p className="text-slate-400">
+          Refine by category, search by storyteller, and open any row to dive into the full detail page.
+        </p>
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <div className="grid md:grid-cols-3 gap-4">
+      <div className="backdrop-blur rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/40">
+        <div className="grid gap-4 md:grid-cols-3">
           {/* Search Bar */}
           <div>
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="search" className="block text-sm font-medium text-slate-400 mb-2">
               Search
             </label>
             <input
@@ -99,20 +65,20 @@ const GalleryPage = () => {
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               placeholder="Search by name or title..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-slate-100 placeholder-slate-500 transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
             />
           </div>
 
           {/* Category Filter */}
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="category" className="block text-sm font-medium text-slate-400 mb-2">
               Category
             </label>
             <select
               id="category"
               value={filters.category}
               onChange={(e) => handleFilterChange('category', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-slate-100 transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
             >
               <option value="all">All Categories</option>
               <option value="Comic">Comic</option>
@@ -125,14 +91,14 @@ const GalleryPage = () => {
 
           {/* Sort */}
           <div>
-            <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="sort" className="block text-sm font-medium text-slate-400 mb-2">
               Sort By
             </label>
             <select
               id="sort"
               value={filters.sort}
               onChange={(e) => handleFilterChange('sort', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/50 px-4 py-2 text-slate-100 transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -144,19 +110,19 @@ const GalleryPage = () => {
       {/* Loading State */}
       {loading && (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading works...</p>
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-cyan-400"></div>
+          <p className="mt-4 text-slate-400">Loading works...</p>
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-800 font-semibold">Error loading works</p>
-          <p className="text-red-600 mt-2">{error}</p>
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center">
+          <p className="text-red-200 font-semibold">Error loading works</p>
+          <p className="text-red-300 mt-2">{error}</p>
           <button
             onClick={fetchWorks}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="mt-4 inline-flex items-center rounded-full bg-red-500/80 px-5 py-2 text-white transition hover:bg-red-400"
           >
             Try Again
           </button>
@@ -167,71 +133,23 @@ const GalleryPage = () => {
       {!loading && !error && (
         <>
           {works.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow-md">
-              <p className="text-gray-600 text-lg">No works found</p>
+            <div className="text-center py-12 rounded-2xl border border-dashed border-slate-700 bg-slate-900/40">
+              <p className="text-slate-200 text-lg">No works found</p>
               <Link
                 to="/upload"
-                className="mt-4 inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="mt-4 inline-flex rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-blue-500/30"
               >
                 Upload Your Work
               </Link>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-6">
               {works.map((work) => (
-                <Link
-                  key={work._id}
-                  to={`/work/${work._id}`}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
-                >
-                  {/* Work Preview */}
-                  <div className="h-48 bg-gray-200 flex items-center justify-center relative overflow-hidden">
-                    {work.fileType === 'image' ? (
-                      <img
-                        src={work.fileUrl}
-                        alt={work.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : work.fileType === 'video' ? (
-                      <video
-                        src={work.fileUrl}
-                        className="w-full h-full object-cover"
-                        muted
-                      />
-                    ) : (
-                      <div className="text-6xl">{getFileTypeIcon(work.fileType)}</div>
-                    )}
-                    <div className="absolute top-2 right-2">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${getCategoryColor(work.category)}`}>
-                        {work.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Work Info */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {work.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                      {work.description}
-                    </p>
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{work.name}</p>
-                        <p className="text-xs text-gray-500">{work.roll}</p>
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {formatDate(work.timestamp)}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                <WorkShowcaseCard key={work._id} work={work} />
               ))}
             </div>
           )}
-          <div className="mt-8 text-center text-gray-600">
+          <div className="mt-8 text-center text-slate-500">
             Showing {works.length} work{works.length !== 1 ? 's' : ''}
           </div>
         </>

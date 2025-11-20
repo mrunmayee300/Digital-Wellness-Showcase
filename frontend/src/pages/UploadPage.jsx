@@ -140,26 +140,26 @@ const UploadPage = () => {
   const filePreview = file ? URL.createObjectURL(file) : null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Upload Your Work</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-slate-100">
+      <h1 className="text-3xl font-bold text-white mb-8">Upload Your Work</h1>
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800 font-semibold">{success.message}</p>
+        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-400/40 rounded-lg">
+          <p className="text-emerald-200 font-semibold">{success.message}</p>
           {success.cloudUrl && (
-            <p className="text-green-600 text-sm mt-1">
+            <p className="text-emerald-200/80 text-sm mt-1">
               Cloud URL: <a href={success.cloudUrl} target="_blank" rel="noopener noreferrer" className="underline">{success.cloudUrl}</a>
             </p>
           )}
-          <p className="text-green-600 text-sm mt-2">Redirecting to gallery...</p>
+          <p className="text-emerald-200/80 text-sm mt-2">Redirecting to gallery...</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6 md:p-8">
+      <form onSubmit={handleSubmit} className="bg-slate-950/60 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl shadow-black/40">
         {/* Student Information */}
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
               Student Name *
             </label>
             <input
@@ -168,16 +168,16 @@ const UploadPage = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
+                errors.name ? 'border border-red-500/60' : 'border border-slate-700'
               }`}
               placeholder="Enter your name"
             />
-            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name}</p>}
           </div>
 
           <div>
-            <label htmlFor="roll" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="roll" className="block text-sm font-medium text-slate-300 mb-2">
               Roll Number *
             </label>
             <input
@@ -186,17 +186,17 @@ const UploadPage = () => {
               name="roll"
               value={formData.roll}
               onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.roll ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
+                errors.roll ? 'border border-red-500/60' : 'border border-slate-700'
               }`}
               placeholder="Enter roll number"
             />
-            {errors.roll && <p className="mt-1 text-sm text-red-600">{errors.roll}</p>}
+            {errors.roll && <p className="mt-1 text-sm text-red-400">{errors.roll}</p>}
           </div>
         </div>
 
         <div className="mb-6">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
             Email *
           </label>
           <input
@@ -205,17 +205,17 @@ const UploadPage = () => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
+              errors.email ? 'border border-red-500/60' : 'border border-slate-700'
             }`}
             placeholder="your.email@example.com"
           />
-          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+          {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
         </div>
 
         {/* Work Information */}
         <div className="mb-6">
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="title" className="block text-sm font-medium text-slate-300 mb-2">
             Title of Work *
           </label>
           <input
@@ -224,16 +224,16 @@ const UploadPage = () => {
             name="title"
             value={formData.title}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.title ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
+              errors.title ? 'border border-red-500/60' : 'border border-slate-700'
             }`}
             placeholder="Enter title of your work"
           />
-          {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+          {errors.title && <p className="mt-1 text-sm text-red-400">{errors.title}</p>}
         </div>
 
         <div className="mb-6">
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="description" className="block text-sm font-medium text-slate-300 mb-2">
             Description *
           </label>
           <textarea
@@ -242,16 +242,16 @@ const UploadPage = () => {
             value={formData.description}
             onChange={handleChange}
             rows={4}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.description ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
+              errors.description ? 'border border-red-500/60' : 'border border-slate-700'
             }`}
             placeholder="Describe your work..."
           />
-          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+          {errors.description && <p className="mt-1 text-sm text-red-400">{errors.description}</p>}
         </div>
 
         <div className="mb-6">
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="category" className="block text-sm font-medium text-slate-300 mb-2">
             Category *
           </label>
           <select
@@ -259,7 +259,7 @@ const UploadPage = () => {
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900/60 text-slate-100 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20"
           >
             <option value="Comic">Comic</option>
             <option value="Website">Website</option>
@@ -271,69 +271,69 @@ const UploadPage = () => {
 
         {/* File Upload with Drag and Drop */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
             File Upload * (Max 300MB)
           </label>
           <div
             {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
               isDragActive
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-cyan-400 bg-cyan-500/10'
                 : errors.file
-                ? 'border-red-500 bg-red-50'
-                : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50'
+                ? 'border-red-500 bg-red-500/10'
+                : 'border-slate-700 bg-slate-900/40 hover:border-cyan-400 hover:bg-slate-900/70'
             }`}
           >
             <input {...getInputProps()} />
             {file ? (
               <div>
-                <p className="text-green-600 font-semibold">✓ {file.name}</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-cyan-200 font-semibold">✓ {file.name}</p>
+                <p className="text-sm text-slate-400 mt-1">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             ) : (
               <div>
-                <p className="text-gray-600">
+                <p className="text-slate-400">
                   {isDragActive
                     ? 'Drop the file here...'
                     : 'Drag & drop a file here, or click to select'}
                 </p>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-slate-500 mt-2">
                   Supports: Images, Videos, PDFs, ZIP files
                 </p>
               </div>
             )}
           </div>
-          {errors.file && <p className="mt-1 text-sm text-red-600">{errors.file}</p>}
+          {errors.file && <p className="mt-1 text-sm text-red-400">{errors.file}</p>}
         </div>
 
         {/* File Preview */}
         {filePreview && file && (
           <div className="mb-6">
-            <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+            <p className="text-sm font-medium text-slate-300 mb-2">Preview:</p>
             {file.type.startsWith('image/') && (
               <img
                 src={filePreview}
                 alt="Preview"
-                className="max-w-full max-h-64 rounded-lg border border-gray-300"
+                className="max-w-full max-h-64 rounded-lg border border-slate-700"
               />
             )}
             {file.type.startsWith('video/') && (
               <video
                 src={filePreview}
                 controls
-                className="max-w-full max-h-64 rounded-lg border border-gray-300"
+                className="max-w-full max-h-64 rounded-lg border border-slate-700"
               />
             )}
             {file.type === 'application/pdf' && (
-              <div className="p-4 bg-gray-100 rounded-lg border border-gray-300">
-                <p className="text-gray-700">📄 PDF File: {file.name}</p>
+              <div className="p-4 bg-slate-900/60 rounded-lg border border-slate-700">
+                <p className="text-slate-300">📄 PDF File: {file.name}</p>
               </div>
             )}
             {file.type.includes('zip') && (
-              <div className="p-4 bg-gray-100 rounded-lg border border-gray-300">
-                <p className="text-gray-700">📦 ZIP File: {file.name}</p>
+              <div className="p-4 bg-slate-900/60 rounded-lg border border-slate-700">
+                <p className="text-slate-300">📦 ZIP File: {file.name}</p>
               </div>
             )}
           </div>
@@ -342,13 +342,13 @@ const UploadPage = () => {
         {/* Upload Progress Bar */}
         {isUploading && (
           <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <div className="flex justify-between text-sm text-slate-400 mb-2">
               <span>Uploading...</span>
               <span>{uploadProgress}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-slate-800 rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -357,8 +357,8 @@ const UploadPage = () => {
 
         {/* Submit Error */}
         {errors.submit && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{errors.submit}</p>
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-200">{errors.submit}</p>
           </div>
         )}
 
@@ -368,8 +368,8 @@ const UploadPage = () => {
           disabled={isUploading}
           className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
             isUploading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
+              ? 'bg-slate-700 cursor-not-allowed'
+              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110'
           }`}
         >
           {isUploading ? 'Uploading...' : 'Upload Work'}
