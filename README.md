@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Digital Wellness Course Showcase Platform
 
 A full-stack cloud-based platform for students to upload and showcase their digital work including comics, magazines, videos, websites, PDFs, and ZIP files.
@@ -466,3 +467,6 @@ For issues or questions, please open an issue on the repository.
 ---
 
 **Happy Coding! 🚀**
+=======
+# Digital-Wellness-Showcase
+>>>>>>> 80b504f25c9a58d757e389244c37c319b75a8e50
