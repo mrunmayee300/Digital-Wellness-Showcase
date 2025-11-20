@@ -1,0 +1,24 @@
+{
+  "name": "digital-wellness-showcase",
+  "version": "1.0.0",
+  "description": "Digital Wellness Course Showcase Platform - Full Stack Application",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": [
+    "react",
+    "express",
+    "mongodb",
+    "cloudinary",
+    "full-stack",
+    "showcase"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^7.0.0"
+  }
+}
