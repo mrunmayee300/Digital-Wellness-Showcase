@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Navigation Bar Component
@@ -6,6 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
  */
 const Navbar = () => {
   const location = useLocation();
+  const { isAuthenticated, canUpload, user, logout } = useAuth();
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -32,16 +34,26 @@ const Navbar = () => {
             >
               Home
             </Link>
-            <Link
-              to="/upload"
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/upload')
-                  ? 'text-cyan-300 bg-cyan-400/10'
-                  : 'text-slate-300 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Upload
-            </Link>
+            {canUpload && (
+              <Link
+                to="/upload"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive('/upload')
+                    ? 'text-cyan-300 bg-cyan-400/10'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Upload
+              </Link>
+            )}
+            {isAuthenticated && (
+              <button
+                onClick={logout}
+                className="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                Logout ({user?.email?.split('@')[0]})
+              </button>
+            )}
             <Link
               to="/gallery"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${

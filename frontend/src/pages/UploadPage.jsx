@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { uploadWork } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Upload Page Component
@@ -9,6 +10,7 @@ import { uploadWork } from '../services/api';
  */
 const UploadPage = () => {
   const navigate = useNavigate();
+  const { user, canUpload, logout } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     roll: '',
@@ -16,12 +18,22 @@ const UploadPage = () => {
     title: '',
     description: '',
     category: 'Comic',
+    url: '', // For website/video URLs
   });
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!canUpload) {
+      navigate('/');
+    } else if (user?.email) {
+      setFormData((prev) => ({ ...prev, email: user.email }));
+    }
+  }, [canUpload, user, navigate]);
 
   // Configure dropzone for drag-and-drop file upload
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -60,6 +72,7 @@ const UploadPage = () => {
   // Validate form fields
   const validate = () => {
     const newErrors = {};
+    const isWebsiteOrVideo = formData.category === 'Website' || formData.category === 'Skit';
     
     if (!formData.name.trim()) newErrors.name = 'Student name is required';
     if (!formData.roll.trim()) newErrors.roll = 'Roll number is required';
@@ -70,7 +83,16 @@ const UploadPage = () => {
     }
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!file) newErrors.file = 'File is required';
+    
+    if (isWebsiteOrVideo) {
+      if (!formData.url.trim()) {
+        newErrors.url = `${formData.category === 'Website' ? 'Website' : 'Video'} URL is required`;
+      } else if (!/^https?:\/\/.+/.test(formData.url.trim())) {
+        newErrors.url = 'Please enter a valid URL (starting with http:// or https://)';
+      }
+    } else {
+      if (!file) newErrors.file = 'File is required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -89,17 +111,35 @@ const UploadPage = () => {
     setSuccess(null);
 
     try {
-      // Create FormData for multipart/form-data upload
-      const data = new FormData();
-      data.append('name', formData.name.trim());
-      data.append('roll', formData.roll.trim());
-      data.append('email', formData.email.trim());
-      data.append('title', formData.title.trim());
-      data.append('description', formData.description.trim());
-      data.append('category', formData.category);
-      data.append('file', file);
+      const isWebsiteOrVideo = formData.category === 'Website' || formData.category === 'Skit';
+      
+      let data;
+      
+      if (isWebsiteOrVideo) {
+        // For URL-based uploads, send as JSON
+        data = {
+          name: formData.name.trim(),
+          roll: formData.roll.trim(),
+          email: formData.email.trim(),
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          category: formData.category,
+          url: formData.url.trim(),
+        };
+      } else {
+        // For file uploads, use FormData
+        const formDataObj = new FormData();
+        formDataObj.append('name', formData.name.trim());
+        formDataObj.append('roll', formData.roll.trim());
+        formDataObj.append('email', formData.email.trim());
+        formDataObj.append('title', formData.title.trim());
+        formDataObj.append('description', formData.description.trim());
+        formDataObj.append('category', formData.category);
+        formDataObj.append('file', file);
+        data = formDataObj;
+      }
 
-      // Upload to backend (which uploads to Cloudinary)
+      // Upload to backend
       const response = await uploadWork(data, (progress) => {
         setUploadProgress(progress);
       });
@@ -113,10 +153,11 @@ const UploadPage = () => {
       setFormData({
         name: '',
         roll: '',
-        email: '',
+        email: user?.email || '',
         title: '',
         description: '',
         category: 'Comic',
+        url: '',
       });
       setFile(null);
       setUploadProgress(0);
@@ -139,9 +180,23 @@ const UploadPage = () => {
   // Get file preview URL
   const filePreview = file ? URL.createObjectURL(file) : null;
 
+  if (!canUpload) {
+    return null; // Will redirect via useEffect
+  }
+
+  const isWebsiteOrVideo = formData.category === 'Website' || formData.category === 'Skit';
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-slate-100">
-      <h1 className="text-3xl font-bold text-white mb-8">Upload Your Work</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-white">Upload Your Work</h1>
+        <button
+          onClick={logout}
+          className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition"
+        >
+          Logout
+        </button>
+      </div>
 
       {success && (
         <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-400/40 rounded-lg">
@@ -205,11 +260,11 @@ const UploadPage = () => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className={`w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
-              errors.email ? 'border border-red-500/60' : 'border border-slate-700'
-            }`}
+            disabled
+            className="w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent border border-slate-700 opacity-70 cursor-not-allowed"
             placeholder="your.email@example.com"
           />
+          <p className="mt-1 text-xs text-slate-500">Email from your Google account</p>
           {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
         </div>
 
@@ -269,47 +324,74 @@ const UploadPage = () => {
           </select>
         </div>
 
-        {/* File Upload with Drag and Drop */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            File Upload * (Max 300MB)
-          </label>
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-              isDragActive
-                ? 'border-cyan-400 bg-cyan-500/10'
-                : errors.file
-                ? 'border-red-500 bg-red-500/10'
-                : 'border-slate-700 bg-slate-900/40 hover:border-cyan-400 hover:bg-slate-900/70'
-            }`}
-          >
-            <input {...getInputProps()} />
-            {file ? (
-              <div>
-                <p className="text-cyan-200 font-semibold">✓ {file.name}</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-              </div>
-            ) : (
-              <div>
-                <p className="text-slate-400">
-                  {isDragActive
-                    ? 'Drop the file here...'
-                    : 'Drag & drop a file here, or click to select'}
-                </p>
-                <p className="text-sm text-slate-500 mt-2">
-                  Supports: Images, Videos, PDFs, ZIP files
-                </p>
-              </div>
-            )}
+        {/* URL Input for Website/Video or File Upload for others */}
+        {isWebsiteOrVideo ? (
+          <div className="mb-6">
+            <label htmlFor="url" className="block text-sm font-medium text-slate-300 mb-2">
+              {formData.category === 'Website' ? 'Website URL' : 'Video URL'} *
+            </label>
+            <input
+              type="url"
+              id="url"
+              name="url"
+              value={formData.url}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 rounded-lg bg-slate-900/60 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
+                errors.url ? 'border border-red-500/60' : 'border border-slate-700'
+              }`}
+              placeholder={
+                formData.category === 'Website'
+                  ? 'https://your-website.com'
+                  : 'https://youtube.com/watch?v=... or https://vimeo.com/...'
+              }
+            />
+            {errors.url && <p className="mt-1 text-sm text-red-400">{errors.url}</p>}
+            <p className="mt-1 text-xs text-slate-500">
+              Enter the full URL of your {formData.category === 'Website' ? 'website' : 'video'}
+            </p>
           </div>
-          {errors.file && <p className="mt-1 text-sm text-red-400">{errors.file}</p>}
-        </div>
+        ) : (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              File Upload * (Max 300MB)
+            </label>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                isDragActive
+                  ? 'border-cyan-400 bg-cyan-500/10'
+                  : errors.file
+                  ? 'border-red-500 bg-red-500/10'
+                  : 'border-slate-700 bg-slate-900/40 hover:border-cyan-400 hover:bg-slate-900/70'
+              }`}
+            >
+              <input {...getInputProps()} />
+              {file ? (
+                <div>
+                  <p className="text-cyan-200 font-semibold">✓ {file.name}</p>
+                  <p className="text-sm text-slate-400 mt-1">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-slate-400">
+                    {isDragActive
+                      ? 'Drop the file here...'
+                      : 'Drag & drop a file here, or click to select'}
+                  </p>
+                  <p className="text-sm text-slate-500 mt-2">
+                    Supports: Images, Videos, PDFs, ZIP files
+                  </p>
+                </div>
+              )}
+            </div>
+            {errors.file && <p className="mt-1 text-sm text-red-400">{errors.file}</p>}
+          </div>
+        )}
 
-        {/* File Preview */}
-        {filePreview && file && (
+        {/* File Preview (only for non-URL uploads) */}
+        {!isWebsiteOrVideo && filePreview && file && (
           <div className="mb-6">
             <p className="text-sm font-medium text-slate-300 mb-2">Preview:</p>
             {file.type.startsWith('image/') && (

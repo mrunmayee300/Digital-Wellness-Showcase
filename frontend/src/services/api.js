@@ -22,19 +22,31 @@ const api = axios.create({
  */
 export const uploadWork = async (formData, onUploadProgress) => {
   try {
-    const response = await api.post('/upload', formData, {
-      headers: {
+    // Check if it's a URL-based upload (website/video) or file upload
+    const isFormData = formData instanceof FormData;
+    const hasFile = isFormData && formData.has('file');
+    
+    const config = {
+      headers: hasFile ? {
         'Content-Type': 'multipart/form-data',
+      } : {
+        'Content-Type': 'application/json',
       },
-      onUploadProgress: (progressEvent) => {
-        if (onUploadProgress && progressEvent.total) {
+    };
+
+    // Add progress tracking only for file uploads
+    if (hasFile && onUploadProgress) {
+      config.onUploadProgress = (progressEvent) => {
+        if (progressEvent.total) {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
           );
           onUploadProgress(percentCompleted);
         }
-      },
-    });
+      };
+    }
+
+    const response = await api.post('/upload', formData, config);
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

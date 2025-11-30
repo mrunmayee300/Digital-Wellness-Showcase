@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getWorks } from '../services/api.js';
-import WorkShowcaseCard from '../components/WorkShowcaseCard.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import LoginButton from '../components/LoginButton.jsx';
 
 /**
  * Home Page Component
  * Gallery-first landing experience with quick upload rail
  */
 const HomePage = () => {
+  const { canUpload } = useAuth();
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,22 +44,33 @@ const HomePage = () => {
           <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
             <div className="space-y-4">
               <h1 className="text-4xl font-semibold leading-tight text-slate-50 sm:text-5xl">
-              Your Guide to Mindful Tech Use & Digital Wellness.              </h1>
+                Your Guide to Mindful Tech Use & Digital Wellness.
+              </h1>
               <p className="text-lg text-slate-400">
-              Boost Productivity With Focused Digital Use              </p>
+                Boost Productivity With Focused Digital Use
+              </p>
             </div>
             <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-2xl shadow-cyan-500/10">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
                 Quick actions
               </p>
               <div className="mt-4 space-y-3">
-                <Link
-                  to="/upload"
-                  className="flex items-center justify-between rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-blue-500/30"
-                >
-                  <span className="font-semibold">Upload new project</span>
-                  <span className="text-2xl">⬆️</span>
-                </Link>
+                {canUpload ? (
+                  <Link
+                    to="/upload"
+                    className="flex items-center justify-between rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-blue-500/30"
+                  >
+                    <span className="font-semibold">Upload new project</span>
+                    <span className="text-2xl">⬆️</span>
+                  </Link>
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-slate-700/70 px-5 py-4 space-y-3">
+                    <p className="text-sm text-slate-400 text-center">
+                      Login with your IIITN email to upload
+                    </p>
+                    <LoginButton />
+                  </div>
+                )}
                 <Link
                   to="/gallery"
                   className="flex items-center justify-between rounded-xl border border-slate-700/70 px-5 py-3 font-semibold text-slate-300 transition hover:border-cyan-400/60 hover:text-white"
@@ -81,40 +94,68 @@ const HomePage = () => {
             </span>
           </div>
 
-          <div className="mt-8 space-y-6">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {loading && (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, idx) => (
+              <>
+                {[...Array(5)].map((_, idx) => (
                   <div
                     key={`skeleton-${idx}`}
-                    className="h-72 w-full animate-pulse rounded-2xl bg-slate-800/50"
+                    className="h-52 w-full animate-pulse rounded-xl bg-slate-800/50"
                   ></div>
                 ))}
-              </div>
+              </>
             )}
 
             {!loading && error && (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center text-red-200">
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center text-red-200 col-span-full">
                 {error}
               </div>
             )}
 
             {!loading && !error && featuredWorks.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-slate-700 p-12 text-center">
+              <div className="rounded-2xl border border-dashed border-slate-700 p-12 text-center col-span-full">
                 <p className="text-lg font-semibold text-slate-100">No submissions yet.</p>
                 <p className="mt-2 text-slate-400">Be the first to showcase your project!</p>
-                <Link
-                  to="/upload"
-                  className="mt-6 inline-flex items-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/30 transition"
-                >
-                  Upload now
-                </Link>
+                {canUpload ? (
+                  <Link
+                    to="/upload"
+                    className="mt-6 inline-flex items-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/30 transition"
+                  >
+                    Upload now
+                  </Link>
+                ) : (
+                  <div className="mt-6 flex justify-center">
+                    <LoginButton />
+                  </div>
+                )}
               </div>
             )}
 
             {!loading &&
               !error &&
-              featuredWorks.map((work) => <WorkShowcaseCard key={work._id} work={work} />)}
+              featuredWorks.map((work) => (
+                <Link
+                  key={work._id}
+                  to={`/work/${work._id}`}
+                  className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 hover:border-cyan-500 transition group"
+                >
+                  <div className="w-full h-52 bg-black flex items-center justify-center overflow-hidden p-1">
+                    <img
+                      src={work.fileUrl || work.thumbnail || work.imageUrl}
+                      alt={work.title}
+                      className="max-h-full max-w-full object-contain group-hover:scale-[1.01] transition"
+                    />
+                  </div>
+                  <div className="px-3 py-2 text-center space-y-1">
+                    <h3 className="text-[13px] font-semibold text-white line-clamp-1">
+                      {work.title || "Untitled"}
+                    </h3>
+                    <p className="text-[11px] text-cyan-300 font-medium">
+                      View Project →
+                    </p>
+                  </div>
+                </Link>
+              ))}
           </div>
         </section>
       </div>
