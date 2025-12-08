@@ -34,7 +34,7 @@ const workSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Category is required'],
-    enum: ['Comic', 'Website', 'Magazine', 'Skit', 'Other'],
+    enum: ['Comic', 'Website', 'Magazine', 'Skit', 'Video', 'Other'],
     trim: true
   },
   fileUrl: {
@@ -44,6 +44,11 @@ const workSchema = new mongoose.Schema({
   fileType: {
     type: String,
     required: [true, 'File type is required']
+  },
+  thumbnailUrl: {
+    type: String,
+    required: false, // Optional - only for Website (landing page) and Video (thumbnail)
+    trim: true
   },
   timestamp: {
     type: Date,

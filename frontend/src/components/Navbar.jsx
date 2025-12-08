@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/Authcontext';
 
 /**
  * Navigation Bar Component
@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
  */
 const Navbar = () => {
   const location = useLocation();
-  const { isAuthenticated, canUpload, user, logout } = useAuth();
+  const { user, loginWithGoogle, logout, canUpload } = useAuth();
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -46,14 +46,6 @@ const Navbar = () => {
                 Upload
               </Link>
             )}
-            {isAuthenticated && (
-              <button
-                onClick={logout}
-                className="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                Logout ({user?.email?.split('@')[0]})
-              </button>
-            )}
             <Link
               to="/gallery"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -64,6 +56,24 @@ const Navbar = () => {
             >
               Gallery
             </Link>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-400">{user.email}</span>
+                <button
+                  onClick={logout}
+                  className="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={loginWithGoogle}
+                className="px-3 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:brightness-110 transition-colors"
+              >
+                Login
+              </button>
+            )}
           </div>
         </div>
       </div>

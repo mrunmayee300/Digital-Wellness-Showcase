@@ -1,70 +1,72 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
+import { auth, provider, onUserChange, loginWithPopup, logout as firebaseLogout } from "../../firebase.js";
 
-const AuthContext = createContext({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  login: () => {},
-  logout: () => {},
-  canUpload: false,
-});
+const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // Email validation for IIITN format: bt2xxxxxxx@iiitn.ac.in
+  useEffect(() => {
+    const unsub = onUserChange((u) => {
+      console.log('Auth state changed:', u ? `User: ${u.email}` : 'No user');
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  const loginWithGoogle = async () => {
+    try {
+      const result = await loginWithPopup(auth, provider);
+      console.log('Login successful:', result.user?.email);
+      // The onAuthStateChanged listener will update the user state
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await firebaseLogout(auth);
+      console.log('Logout successful');
+      // The onAuthStateChanged listener will update the user state
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  };
+
+  // Check if user email matches IIITN format
   const isValidEmail = (email) => {
     if (!email) return false;
     const pattern = /^bt2\d{7}@iiitn\.ac\.in$/i;
     return pattern.test(email);
   };
 
-  useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('dw_user');
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        setUser(parsed);
-      } catch (e) {
-        localStorage.removeItem('dw_user');
-      }
-    }
-    setIsLoading(false);
-  }, []);
+  // Memoize canUpload to ensure it updates when user changes
+  const canUpload = useMemo(() => {
+    return user && isValidEmail(user.email);
+  }, [user]);
 
-  const login = (userData) => {
-    if (isValidEmail(userData.email)) {
-      setUser(userData);
-      localStorage.setItem('dw_user', JSON.stringify(userData));
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('dw_user');
-  };
-
-  const canUpload = user && isValidEmail(user.email);
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
+    user,
+    loginWithGoogle,
+    logout,
+    loading,
+    canUpload,
+    isValidEmail
+  }), [user, loading, canUpload]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        logout,
-        canUpload,
-        isValidEmail,
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => useContext(AuthContext);
+}

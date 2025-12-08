@@ -26,7 +26,20 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer middleware
+// Image filter for thumbnails (only images)
+const imageFilter = (req, file, cb) => {
+  const allowedImageTypes = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'
+  ];
+
+  if (allowedImageTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Thumbnail must be an image file (JPEG, PNG, GIF, WebP)'), false);
+  }
+};
+
+// Configure multer middleware for main file
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -35,27 +48,55 @@ const upload = multer({
   }
 });
 
+// Configure multer middleware for thumbnail images (smaller size limit)
+const uploadThumbnail = multer({
+  storage: storage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit for thumbnails
+  }
+});
+
+// Combined upload middleware for both file and thumbnail
+const uploadFields = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    // Use image filter for thumbnail, file filter for main file
+    if (file.fieldname === 'thumbnail') {
+      imageFilter(req, file, cb);
+    } else {
+      fileFilter(req, file, cb);
+    }
+  },
+  limits: {
+    fileSize: 300 * 1024 * 1024 // 300MB limit (applies to main file)
+  }
+}).fields([
+  { name: 'file', maxCount: 1 },
+  { name: 'thumbnail', maxCount: 1 }
+]);
+
+// Email validation for IIITN format
+const validateIIITNEmail = (email) => {
+  const pattern = /^bt2\d{7}@iiitn\.ac\.in$/i;
+  return pattern.test(email);
+};
+
 // Custom middleware to handle optional file upload based on content-type
 const optionalFileUpload = (req, res, next) => {
   // If content-type is application/json, skip multer (URL-based upload)
   if (req.headers['content-type']?.includes('application/json')) {
     return next();
   }
-  
-  // For multipart/form-data, use multer (file upload)
-  upload.single('file')(req, res, (err) => {
-    // Ignore multer errors if no file is provided (will be validated in route handler)
+
+  // For multipart/form-data, use multer (file upload with optional thumbnail)
+  uploadFields(req, res, (err) => {
+    // Ignore multer errors if no file/thumbnail is provided; validation will catch missing file later
     if (err && err.code !== 'LIMIT_UNEXPECTED_FILE') {
       return next(err);
     }
     next();
   });
-};
-
-// Email validation for IIITN format
-const validateIIITNEmail = (email) => {
-  const pattern = /^bt2\d{7}@iiitn\.ac\.in$/i;
-  return pattern.test(email);
 };
 
 // Validation rules for form fields
@@ -73,13 +114,15 @@ const validateFields = [
     }),
   body('title').trim().notEmpty().withMessage('Title is required'),
   body('description').trim().notEmpty().withMessage('Description is required'),
-  body('category').isIn(['Comic', 'Website', 'Magazine', 'Skit', 'Other']).withMessage('Valid category is required')
+  body('category').isIn(['Comic', 'Website', 'Magazine', 'Skit', 'Video', 'Other']).withMessage('Valid category is required'),
+  body('url').optional().isURL().withMessage('Valid URL is required for Website/Video categories')
 ];
 
 /**
  * POST /api/upload
  * Upload student work to cloud storage and save metadata to MongoDB
- * Supports both file uploads and URL-based uploads (for Website/Video categories)
+ * Supports both file uploads and URL submissions (for Website/Video)
+ * Also handles thumbnail/landing page image uploads for Website and Video categories
  */
 router.post('/', optionalFileUpload, validateFields, async (req, res) => {
   try {
@@ -89,43 +132,63 @@ router.post('/', optionalFileUpload, validateFields, async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const isWebsiteOrVideo = req.body.category === 'Website' || req.body.category === 'Skit';
+    const category = req.body.category;
+    const isUrlCategory = category === 'Website' || category === 'Video';
     let fileUrl = '';
     let fileType = 'other';
+    let thumbnailUrl = null;
 
-    if (isWebsiteOrVideo) {
-      // Handle URL-based uploads
+    // Handle thumbnail image upload (for Website and Video categories)
+    if (isUrlCategory && req.files && req.files.thumbnail && req.files.thumbnail[0]) {
+      const thumbnailFile = req.files.thumbnail[0];
+      
+      // Check thumbnail file size (10MB limit)
+      if (thumbnailFile.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ error: 'Thumbnail image size exceeds 10MB limit' });
+      }
+
+      // Upload thumbnail to Cloudinary
+      console.log(`Uploading thumbnail image: ${thumbnailFile.originalname}...`);
+      const thumbnailResult = await uploadToCloudinary(
+        thumbnailFile.buffer,
+        'image',
+        'student-works/thumbnails'
+      );
+
+      thumbnailUrl = thumbnailResult.url;
+      console.log(`✅ Thumbnail uploaded: ${thumbnailUrl}`);
+    }
+
+    // Handle URL-based submissions (Website/Video)
+    if (isUrlCategory) {
       if (!req.body.url || !req.body.url.trim()) {
-        return res.status(400).json({ error: `${req.body.category} URL is required` });
+        return res.status(400).json({ error: `${category} URL is required` });
       }
-
-      // Validate URL format
-      try {
-        new URL(req.body.url.trim());
-      } catch (e) {
-        return res.status(400).json({ error: 'Invalid URL format' });
-      }
-
+      
       fileUrl = req.body.url.trim();
-      fileType = req.body.category === 'Website' ? 'website' : 'video';
+      fileType = category === 'Website' ? 'website' : 'video';
+      
+      console.log(`Saving ${category} URL: ${fileUrl}`);
     } else {
-      // Handle file uploads
-      if (!req.file) {
+      // Handle file uploads for other categories
+      const mainFile = req.files && req.files.file ? req.files.file[0] : null;
+      
+      if (!mainFile) {
         return res.status(400).json({ error: 'File is required' });
       }
 
       // Check file size (double check, even though multer should handle it)
-      if (req.file.size > 300 * 1024 * 1024) {
+      if (mainFile.size > 300 * 1024 * 1024) {
         return res.status(400).json({ error: 'File size exceeds 300MB limit' });
       }
 
       // Determine resource type for Cloudinary
-      const resourceType = getResourceType(req.file.mimetype);
+      const resourceType = getResourceType(mainFile.mimetype);
 
       // Upload file directly to Cloudinary from buffer (no local storage)
-      console.log(`Uploading ${req.file.originalname} to Cloudinary...`);
+      console.log(`Uploading ${mainFile.originalname} to Cloudinary...`);
       const cloudinaryResult = await uploadToCloudinary(
-        req.file.buffer,
+        mainFile.buffer,
         resourceType,
         'student-works'
       );
@@ -133,30 +196,36 @@ router.post('/', optionalFileUpload, validateFields, async (req, res) => {
       fileUrl = cloudinaryResult.url;
 
       // Determine file type for our database
-      if (req.file.mimetype.startsWith('image/')) {
+      if (mainFile.mimetype.startsWith('image/')) {
         fileType = 'image';
-      } else if (req.file.mimetype.startsWith('video/')) {
+      } else if (mainFile.mimetype.startsWith('video/')) {
         fileType = 'video';
-      } else if (req.file.mimetype === 'application/pdf') {
+      } else if (mainFile.mimetype === 'application/pdf') {
         fileType = 'pdf';
-      } else if (req.file.mimetype.includes('zip')) {
+      } else if (mainFile.mimetype.includes('zip')) {
         fileType = 'zip';
       }
     }
 
     // Save work metadata to MongoDB Atlas
-    const work = new Work({
+    const workData = {
       name: req.body.name.trim(),
       roll: req.body.roll.trim(),
       email: req.body.email.trim().toLowerCase(),
       title: req.body.title.trim(),
       description: req.body.description.trim(),
-      category: req.body.category,
+      category: category,
       fileUrl: fileUrl,
       fileType: fileType,
       timestamp: new Date()
-    });
+    };
 
+    // Add thumbnail URL if available
+    if (thumbnailUrl) {
+      workData.thumbnailUrl = thumbnailUrl;
+    }
+
+    const work = new Work(workData);
     const savedWork = await work.save();
 
     console.log(`✅ Work uploaded successfully: ${savedWork._id}`);
@@ -166,7 +235,8 @@ router.post('/', optionalFileUpload, validateFields, async (req, res) => {
       success: true,
       message: 'Work uploaded successfully',
       work: savedWork,
-      cloudUrl: fileUrl
+      cloudUrl: fileUrl,
+      thumbnailUrl: thumbnailUrl
     });
 
   } catch (error) {

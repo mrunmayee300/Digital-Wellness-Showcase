@@ -24,16 +24,22 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB Atlas connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://your-connection-string';
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+// Remove deprecated options - they're no longer needed in mongoose 6+
+mongoose.connect(MONGODB_URI)
 .then(() => {
   console.log('✅ Connected to MongoDB Atlas');
 })
 .catch((error) => {
   console.error('❌ MongoDB connection error:', error);
-  process.exit(1);
+  console.error('\n💡 Troubleshooting tips:');
+  console.error('1. Check your MONGODB_URI in .env file');
+  console.error('2. Ensure your IP address is whitelisted in MongoDB Atlas:');
+  console.error('   - Go to MongoDB Atlas → Network Access → Add IP Address');
+  console.error('   - Add 0.0.0.0/0 for all IPs (development only) or your specific IP');
+  console.error('3. Verify your MongoDB username and password are correct');
+  console.error('4. Check if your MongoDB cluster is running\n');
+  // Don't exit in development - allow server to keep running for other features
+  // process.exit(1);
 });
 
 // Routes

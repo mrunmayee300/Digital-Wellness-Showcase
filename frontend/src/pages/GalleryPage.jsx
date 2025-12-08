@@ -69,6 +69,7 @@ const GalleryPage = () => {
               <option value="Website">Website</option>
               <option value="Magazine">Magazine</option>
               <option value="Skit">Skit</option>
+              <option value="Video">Video</option>
               <option value="Other">Other</option>
             </select>
           </div>
@@ -116,7 +117,7 @@ const GalleryPage = () => {
         </div>
       )}
 
-      {/* Gallery Grid - matching home page format */}
+      {/* Gallery Grid - Matching HomePage format */}
       {!loading && !error && works.length > 0 && (
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {works.map((work) => (
@@ -132,17 +133,39 @@ const GalleryPage = () => {
                     alt={work.title}
                     className="max-h-full max-w-full object-contain group-hover:scale-[1.01] transition"
                   />
-                ) : work.fileType === 'video' || work.fileType === 'website' ? (
-                  <div className="text-4xl text-slate-500">
-                    {work.fileType === 'video' ? '🎥' : '🌐'}
-                  </div>
+                ) : work.fileType === 'video' ? (
+                  work.thumbnailUrl ? (
+                    <img
+                      src={work.thumbnailUrl}
+                      alt={work.title}
+                      className="max-h-full max-w-full object-cover group-hover:scale-[1.01] transition"
+                    />
+                  ) : (
+                    <video
+                      src={work.fileUrl}
+                      className="max-h-full max-w-full object-contain"
+                      muted
+                    />
+                  )
+                ) : work.fileType === 'website' ? (
+                  work.thumbnailUrl ? (
+                    <img
+                      src={work.thumbnailUrl}
+                      alt={work.title}
+                      className="max-h-full max-w-full object-cover group-hover:scale-[1.01] transition"
+                    />
+                  ) : (
+                    <div className="text-4xl text-slate-500">🌐</div>
+                  )
                 ) : (
-                  <div className="text-4xl text-slate-500">📄</div>
+                  <div className="text-4xl text-slate-500">
+                    {work.fileType === 'pdf' ? '📄' : work.fileType === 'zip' ? '📦' : '📁'}
+                  </div>
                 )}
               </div>
               <div className="px-3 py-2 text-center space-y-1">
                 <h3 className="text-[13px] font-semibold text-white line-clamp-1">
-                  {work.title || 'Untitled'}
+                  {work.title || "Untitled"}
                 </h3>
                 <p className="text-[11px] text-cyan-300 font-medium">
                   View Project →

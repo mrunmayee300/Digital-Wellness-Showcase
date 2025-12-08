@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getWorks } from '../services/api.js';
-import { useAuth } from '../context/AuthContext.jsx';
-import LoginButton from '../components/LoginButton.jsx';
+import { useAuth } from '../context/Authcontext';
 
 /**
  * Home Page Component
  * Gallery-first landing experience with quick upload rail
  */
 const HomePage = () => {
-  const { canUpload } = useAuth();
+  const { user, loginWithGoogle, canUpload } = useAuth();
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,7 +54,7 @@ const HomePage = () => {
                 Quick actions
               </p>
               <div className="mt-4 space-y-3">
-                {canUpload ? (
+                {user ? (
                   <Link
                     to="/upload"
                     className="flex items-center justify-between rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-blue-500/30"
@@ -64,12 +63,13 @@ const HomePage = () => {
                     <span className="text-2xl">⬆️</span>
                   </Link>
                 ) : (
-                  <div className="flex flex-col items-center justify-center rounded-xl border border-slate-700/70 px-5 py-4 space-y-3">
-                    <p className="text-sm text-slate-400 text-center">
-                      Login with your IIITN email to upload
-                    </p>
-                    <LoginButton />
-                  </div>
+                  <button
+                    onClick={loginWithGoogle}
+                    className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-blue-500/30"
+                  >
+                    <span className="font-semibold">Login with Google</span>
+                    <span className="text-2xl">🔐</span>
+                  </button>
                 )}
                 <Link
                   to="/gallery"
@@ -116,18 +116,12 @@ const HomePage = () => {
               <div className="rounded-2xl border border-dashed border-slate-700 p-12 text-center col-span-full">
                 <p className="text-lg font-semibold text-slate-100">No submissions yet.</p>
                 <p className="mt-2 text-slate-400">Be the first to showcase your project!</p>
-                {canUpload ? (
-                  <Link
-                    to="/upload"
-                    className="mt-6 inline-flex items-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/30 transition"
-                  >
-                    Upload now
-                  </Link>
-                ) : (
-                  <div className="mt-6 flex justify-center">
-                    <LoginButton />
-                  </div>
-                )}
+                <Link
+                  to="/upload"
+                  className="mt-6 inline-flex items-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/30 transition"
+                >
+                  Upload now
+                </Link>
               </div>
             )}
 
@@ -140,11 +134,41 @@ const HomePage = () => {
                   className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 hover:border-cyan-500 transition group"
                 >
                   <div className="w-full h-52 bg-black flex items-center justify-center overflow-hidden p-1">
-                    <img
-                      src={work.fileUrl || work.thumbnail || work.imageUrl}
-                      alt={work.title}
-                      className="max-h-full max-w-full object-contain group-hover:scale-[1.01] transition"
-                    />
+                    {work.fileType === 'image' ? (
+                      <img
+                        src={work.fileUrl}
+                        alt={work.title}
+                        className="max-h-full max-w-full object-contain group-hover:scale-[1.01] transition"
+                      />
+                    ) : work.fileType === 'video' ? (
+                      work.thumbnailUrl ? (
+                        <img
+                          src={work.thumbnailUrl}
+                          alt={work.title}
+                          className="max-h-full max-w-full object-cover group-hover:scale-[1.01] transition"
+                        />
+                      ) : (
+                        <video
+                          src={work.fileUrl}
+                          className="max-h-full max-w-full object-contain"
+                          muted
+                        />
+                      )
+                    ) : work.fileType === 'website' ? (
+                      work.thumbnailUrl ? (
+                        <img
+                          src={work.thumbnailUrl}
+                          alt={work.title}
+                          className="max-h-full max-w-full object-cover group-hover:scale-[1.01] transition"
+                        />
+                      ) : (
+                        <div className="text-4xl text-slate-500">🌐</div>
+                      )
+                    ) : (
+                      <div className="text-4xl text-slate-500">
+                        {work.fileType === 'pdf' ? '📄' : work.fileType === 'zip' ? '📦' : '📁'}
+                      </div>
+                    )}
                   </div>
                   <div className="px-3 py-2 text-center space-y-1">
                     <h3 className="text-[13px] font-semibold text-white line-clamp-1">

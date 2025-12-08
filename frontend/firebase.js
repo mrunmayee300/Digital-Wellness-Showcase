@@ -3,6 +3,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
@@ -37,9 +38,11 @@ export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 
-// Auth helpers
+// Auth helpers - wrapper functions to use CDN imports
 export const signIn = () => signInWithPopup(auth, provider);
 export const onUserChange = (callback) => onAuthStateChanged(auth, callback);
+export const loginWithPopup = (authInstance, providerInstance) => signInWithPopup(authInstance, providerInstance);
+export const logout = (authInstance) => signOut(authInstance);
 
 // Firestore helpers
 export {
