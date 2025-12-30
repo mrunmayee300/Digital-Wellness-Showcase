@@ -1,52 +1,54 @@
 import axios from 'axios';
 
-// API base URL - uses environment variable or defaults to localhost
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// API base URL - uses environment variable or defaults to localhost for dev
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 /**
- * API Service
- * Handles all API calls to the backend
+ * Axios instance used for all backend requests
  */
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
   withCredentials: true
 });
 
 /**
- * Upload student work
- * @param {FormData} formData - Form data containing file and metadata
- * @param {Function} onUploadProgress - Progress callback
- * @returns {Promise} Upload response
+ * Upload a work with file + metadata
+ * @param {File} file - uploaded file
+ * @param {Object} metadata - title, category, etc.
+ * @param {Function} onUploadProgress - upload progress handler
  */
-export const uploadWork = async (formData, onUploadProgress) => {
+export const uploadWork = async (file, metadata, onUploadProgress) => {
   try {
+    const formData = new FormData();
+    formData.append('file', file); // REQUIRED — backend expects "file"
+
+    // Required metadata fields
+    Object.entries(metadata).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
     const response = await api.post('/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'multipart/form-data'
       },
-      onUploadProgress: (progressEvent) => {
-        if (onUploadProgress && progressEvent.total) {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          onUploadProgress(percentCompleted);
+      onUploadProgress: (event) => {
+        if (onUploadProgress && event.total) {
+          const percent = Math.round((event.loaded * 100) / event.total);
+          onUploadProgress(percent);
         }
-      },
+      }
     });
+
     return response.data;
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("🚫 Upload failed:", error.response?.data || error.message);
     throw error.response?.data || { error: "Upload failed" };
   }
 };
 
 /**
- * Get all works with optional filters
- * @param {Object} filters - Filter options (category, search, sort)
- * @returns {Promise} Works list
+ * Fetch all works with filters
  */
 export const getWorks = async (filters = {}) => {
   try {
@@ -54,22 +56,20 @@ export const getWorks = async (filters = {}) => {
     const response = await api.get(`/works?${params}`);
     return response.data;
   } catch (error) {
-    console.error("Get works error:", error);
+    console.error("🚫 Fetch works failed:", error.response?.data || error.message);
     throw error.response?.data || { error: "Failed to fetch works" };
   }
 };
 
 /**
- * Get single work by ID
- * @param {string} id - Work ID
- * @returns {Promise} Work details
+ * Fetch single work by ID
  */
 export const getWorkById = async (id) => {
   try {
     const response = await api.get(`/works/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Get work error:", error);
+    console.error("🚫 Fetch work failed:", error.response?.data || error.message);
     throw error.response?.data || { error: "Work not found" };
   }
 };
