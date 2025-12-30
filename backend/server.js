@@ -11,35 +11,26 @@ dotenv.config();
 const app = express();
 
 // Middleware
-// Configure CORS with environment variable for production
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
+// Strict CORS setup for production
+app.use(cors({
+  origin: "https://digital-wellness-showcase.vercel.app",
   credentials: true,
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB Atlas connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://your-connection-string';
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// Remove deprecated options - they're no longer needed in mongoose 6+
 mongoose.connect(MONGODB_URI)
 .then(() => {
-  console.log('✅ Connected to MongoDB Atlas');
+  console.log('🎯 MongoDB Connected Successfully!');
 })
 .catch((error) => {
-  console.error('❌ MongoDB connection error:', error);
-  console.error('\n💡 Troubleshooting tips:');
-  console.error('1. Check your MONGODB_URI in .env file');
-  console.error('2. Ensure your IP address is whitelisted in MongoDB Atlas:');
-  console.error('   - Go to MongoDB Atlas → Network Access → Add IP Address');
-  console.error('   - Add 0.0.0.0/0 for all IPs (development only) or your specific IP');
-  console.error('3. Verify your MongoDB username and password are correct');
-  console.error('4. Check if your MongoDB cluster is running\n');
-  // Don't exit in development - allow server to keep running for other features
-  // process.exit(1);
+  console.error('❌ MongoDB connection error:', error.message);
 });
 
 // Routes
@@ -51,9 +42,14 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// Default route for invalid paths
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("🔥 Internal Server Error:", err.message);
   res.status(500).json({ 
     error: 'Something went wrong!',
     message: err.message 
