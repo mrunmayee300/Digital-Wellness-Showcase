@@ -5,7 +5,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 /**
- * Axios instance used for all backend requests
+ * Axios instance for backend communication
  */
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,26 +13,30 @@ const api = axios.create({
 });
 
 /**
- * Upload a work with file + metadata
- * @param {File} file - uploaded file
- * @param {Object} metadata - title, category, etc.
- * @param {Function} onUploadProgress - upload progress handler
+ * Upload a work with file + metadata fields
+ * @param {File} file
+ * @param {Object} metadata - title, category, description, etc.
+ * @param {Function} onUploadProgress
  */
 export const uploadWork = async (file, metadata, onUploadProgress) => {
   try {
     const formData = new FormData();
-    formData.append('file', file); // REQUIRED — backend expects "file"
 
-    // Required metadata fields
+    // File (backend expects key = "file")
+    formData.append("file", file);
+
+    // Additional metadata fields
     Object.entries(metadata).forEach(([key, value]) => {
-      formData.append(key, value);
+      if (value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
     });
 
-    const response = await api.post('/upload', formData, {
+    const response = await api.post("/upload", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        "Content-Type": "multipart/form-data"
       },
-      onUploadProgress: (event) => {
+      onUploadProgress: event => {
         if (onUploadProgress && event.total) {
           const percent = Math.round((event.loaded * 100) / event.total);
           onUploadProgress(percent);
@@ -41,14 +45,16 @@ export const uploadWork = async (file, metadata, onUploadProgress) => {
     });
 
     return response.data;
+
   } catch (error) {
-    console.error("🚫 Upload failed:", error.response?.data || error.message);
+    console.error("🚫 Full upload error:", error.response?.data);
+    alert(JSON.stringify(error.response?.data, null, 2)); // Shows exact missing fields
     throw error.response?.data || { error: "Upload failed" };
   }
 };
 
 /**
- * Fetch all works with filters
+ * Fetch all works
  */
 export const getWorks = async (filters = {}) => {
   try {
@@ -56,7 +62,7 @@ export const getWorks = async (filters = {}) => {
     const response = await api.get(`/works?${params}`);
     return response.data;
   } catch (error) {
-    console.error("🚫 Fetch works failed:", error.response?.data || error.message);
+    console.error("🚫 Fetch works failed:", error.response?.data);
     throw error.response?.data || { error: "Failed to fetch works" };
   }
 };
@@ -69,7 +75,7 @@ export const getWorkById = async (id) => {
     const response = await api.get(`/works/${id}`);
     return response.data;
   } catch (error) {
-    console.error("🚫 Fetch work failed:", error.response?.data || error.message);
+    console.error("🚫 Fetch work failed:", error.response?.data);
     throw error.response?.data || { error: "Work not found" };
   }
 };
