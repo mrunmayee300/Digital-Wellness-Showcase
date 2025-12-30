@@ -12,6 +12,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true
 });
 
 /**
@@ -37,7 +38,8 @@ export const uploadWork = async (formData, onUploadProgress) => {
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data || error.message;
+    console.error("Upload error:", error);
+    throw error.response?.data || { error: "Upload failed" };
   }
 };
 
@@ -48,15 +50,12 @@ export const uploadWork = async (formData, onUploadProgress) => {
  */
 export const getWorks = async (filters = {}) => {
   try {
-    const params = new URLSearchParams();
-    if (filters.category) params.append('category', filters.category);
-    if (filters.search) params.append('search', filters.search);
-    if (filters.sort) params.append('sort', filters.sort);
-
-    const response = await api.get(`/works?${params.toString()}`);
+    const params = new URLSearchParams(filters).toString();
+    const response = await api.get(`/works?${params}`);
     return response.data;
   } catch (error) {
-    throw error.response?.data || error.message;
+    console.error("Get works error:", error);
+    throw error.response?.data || { error: "Failed to fetch works" };
   }
 };
 
@@ -70,7 +69,8 @@ export const getWorkById = async (id) => {
     const response = await api.get(`/works/${id}`);
     return response.data;
   } catch (error) {
-    throw error.response?.data || error.message;
+    console.error("Get work error:", error);
+    throw error.response?.data || { error: "Work not found" };
   }
 };
 
